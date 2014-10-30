@@ -1,6 +1,6 @@
 -module(steam).
 
--export([retrieve/0, start/0]).
+-export([retrieve/0, start/0, store/1, get/0]).
 
 
 
@@ -19,7 +19,31 @@ Struct=mochijson:decode(JSON),
 {struct, JsonData} = Struct,
 {struct, Job} = proplists:get_value("response",JsonData),
 Level=proplists:get_value("player_level", Job),
-Level.
+Level,
+store(Level).
+
+
+store(A) ->
+{ok, Pid} = riakc_pb_socket:start_link("127.0.0.1", 10017),
+register(server, Pid),
+riakc_pb_socket:ping(Pid),
+io:format("~p~n", [Pid]),
+Object = riakc_obj:new(<<"steam">>, <<"steamlevel">>, <<A>>),
+Object,
+riakc_pb_socket:put(Pid, Object).
+
+
+get()->
+{ok, Data} = riakc_pb_socket:get(server, <<"steam">>, <<"steamlevel">>),
+io:format("~p~n", [Data]).
+
+
+
+
+
+
+
+
 
 
 
