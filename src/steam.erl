@@ -4,6 +4,7 @@
 
 
 
+
 start() ->
 
 ssl:start(),
@@ -12,6 +13,14 @@ retrieve().
 
 retrieve () ->
 
-{ok,{_,_,XML}}=httpc:request(get, {"http://api.steampowered.com/IPlayerService/GetSteamLevel/v1/?key=80C9F831FD044A94E0A0FE0792624CD4&steamid=76561197960435530", []},[], []),
-XML.
+{ok,{_,_,JSON}}=httpc:request(get, {"http://api.steampowered.com/IPlayerService/GetSteamLevel/v1/?key=80C9F831FD044A94E0A0FE0792624CD4&steamid=76561197960435530", []},[], []),
+
+Struct=mochijson:decode(JSON),
+{struct, JsonData} = Struct,
+{struct, Job} = proplists:get_value("response",JsonData),
+Level=proplists:get_value("player_level", Job),
+Level.
+
+
+
 
