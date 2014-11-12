@@ -1,4 +1,4 @@
--module(steam).
+-module(steamlevel).
 
 -export([retrieve/0, start/0, store/1, get/0]).
 
