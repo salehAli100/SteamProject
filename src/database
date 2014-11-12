@@ -1,0 +1,71 @@
+-module(database).
+
+-export([retrieve/0, start/0,connect/0, store/1, get/0, findgames/1]).
+
+
+
+
+start() ->
+
+ssl:start(),
+application:start(inets),
+connect(),
+retrieve().
+
+retrieve () ->
+
+ID="76561197960435530",
+
+{ok,{_,_,JSON}}=httpc:request(get, {"http://api.steampowered.com/ISteamUser/GetFriendList/v0001/?key=80C9F831FD044A94E0A0FE0792624CD4&steamid="++ID++"&relationship=friend", []},[], []),
+
+Struct=mochijson:decode(JSON),
+
+{struct, JsonData} = Struct,
+{struct, Job} = proplists:get_value("friendslist",JsonData),
+{array, Data} = proplists:get_value("friends",Job),
+A=[parse(N) || N <- Data],
+
+store(A).
+%ConvertedList = io_lib:format("~w", [A]),
+%List = lists:flatten(ConvertedList),
+%List.
+%store( List).
+%Playlist=[findgames(X) || X <- A],
+%Games=[mochijson:decode(C) || C <- Playlist],
+
+
+%io:format("Games: ~p.", [Games]).
+
+
+
+parse(S) ->
+{struct, Hey} = S,
+D=proplists:get_value("steamid",Hey),
+C=string:strip(D, both, $"),
+C.
+
+connect()->
+{ok, Pid} = riakc_pb_socket:start_link("127.0.0.1", 10017),
+register(server, Pid).
+
+store(B) ->
+
+riakc_pb_socket:ping(server),
+io:format("~p~n", [server]),
+Object = riakc_obj:new(<<"friendslist">>, <<"76561197960435530">>, B),
+Object,
+riakc_pb_socket:put(server, Object).
+
+
+findgames(A) ->
+{ok,{_,_,JSON}}=httpc:request(get, {"http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=80C9F831FD044A94E0A0FE0792624CD4&steamid="++A++"&format=json", []},[], []),
+JSON.
+
+get()->
+{ok, Data} = riakc_pb_socket:get(server, <<"friendslist">>, <<"76561197960435530">>),
+Friends=riakc_obj:get_value(Data),
+A=binary_to_term(Friends),
+%A=[N || N <- Friends],
+A.
+%io:format("~p~n", [Friends]).
+
