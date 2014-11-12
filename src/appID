@@ -1,0 +1,58 @@
+-module(appID).
+
+-export([retrieve/0, start/0, findApp/1, parseID/1, parseApp/1]).
+
+
+
+
+start() ->
+
+ssl:start(),
+application:start(inets),
+retrieve().
+
+retrieve () ->
+
+{ok,{_,_,JSON}}=httpc:request(get, {"http://api.steampowered.com/ISteamUser/GetFriendList/v0001/?key=80C9F831FD044A94E0A0FE0792624CD4&steamid=76561197960435530&relationship=friend", []},[], []),
+
+Struct=mochijson:decode(JSON),
+
+{struct, JsonData} = Struct,
+{struct, Job} = proplists:get_value("friendslist",JsonData),
+{array, Data} = proplists:get_value("friends",Job),
+
+A=[parseID(N) || N <- Data],
+
+Playlist=[findApp(X) || X <- A].
+
+
+parseID(S) ->
+{struct, Hey} = S,
+D=proplists:get_value("steamid",Hey),
+C=string:strip(D, both, $"),
+C.
+
+
+findApp(A) ->
+{ok,{_,_,JSON}}=httpc:request(get, {"http://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/?key=80C9F831FD044A94E0A0FE0792624CD4&steamid="++A++"&format=json", []},[], []),
+JSON,
+
+Struct=mochijson:decode(JSON),
+
+{struct, JsonData} = Struct,
+{struct, Job} = proplists:get_value("response",JsonData),
+
+
+{array, Name} = proplists:get_value("games",Job),
+Name,
+
+
+A=[parseApp(N) || N <- Name],
+
+io:format("appid: ~p.", [A]).
+
+
+parseApp(S) ->
+{struct, Hey} = S,
+D =proplists:get_value("appid",Hey),
+D.
