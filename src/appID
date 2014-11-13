@@ -9,7 +9,6 @@ start() ->
 ssl:start(),
 application:start(inets),
 retrieve().
-%76561197960268093
 retrieve () ->
 
 {ok,{_,_,JSON}}=httpc:request(get, {"http://api.steampowered.com/ISteamUser/GetFriendList/v0001/?key=80C9F831FD044A94E0A0FE0792624CD4&steamid=76561197960435530&relationship=friend", []},[], []),
@@ -41,7 +40,7 @@ case Struct of
 		{_,Y}-> case Y of
 
 			{struct,List}-> case lists:keyfind("games", 1, List) of
-				false->ok;
+				false->["this id has no game"];
 				{_,{_,ListI}} -> parse_list(ListI,[])
 							end
 		end
