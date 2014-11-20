@@ -1,0 +1,55 @@
+-module(database).
+
+-export([connect/0, store_friends/2, get_friendslist/1,  store_appID/2, store_app/0, get_ownedgames/1]).
+
+
+
+
+
+
+connect()->
+
+{ok, Pid} = riakc_pb_socket:start_link("127.0.0.1", 10027),
+register(server, Pid).
+
+store_friends(ID, B) ->
+
+riakc_pb_socket:ping(server),
+Object = riakc_obj:new(<<"friendslist">>, ID, B),
+riakc_pb_socket:put(server, Object).
+
+
+store_app() ->
+
+StartID="76561197960435530",
+riakc_pb_socket:ping(server),
+FriendList=get_friendslist(StartID),
+[store_appID(N, appID:findApp(N)) || N <- FriendList].
+
+store_appID(ID, B) ->
+
+BinaryID=term_to_binary(ID),
+Object = riakc_obj:new(<<"ownedgames">>, BinaryID, B),
+riakc_pb_socket:put(server, Object).
+
+
+
+
+
+
+get_friendslist(ID)->
+
+{ok, Data} = riakc_pb_socket:get(server, <<"friendslist">>, ID),
+FriendList=riakc_obj:get_value(Data),
+binary_to_term(FriendList).
+
+
+get_ownedgames(ID)->
+
+BinaryID=term_to_binary(ID),
+{ok, Data} = riakc_pb_socket:get(server, <<"ownedgames">>, BinaryID),
+OwnedGamesList=riakc_obj:get_value(Data),
+binary_to_term(OwnedGamesList).
+
+
+
