@@ -1,0 +1,45 @@
+-module(main).
+
+-export([ownedgames/0, gamenames/0, hoursplayed/0]).
+
+
+
+
+
+ownedgames() ->
+
+database:connect(),
+friendslist:start(),
+database:store_app().
+
+
+gamenames() ->
+
+database:connect(),
+gamename:findgames().
+
+
+
+
+hoursplayed() ->
+
+database:connect(),
+A=database:get_friendslist("76561197960435530"),
+[hoursplayed:findHours(N)|| N <- A].
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
